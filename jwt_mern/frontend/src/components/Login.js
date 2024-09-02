@@ -1,40 +1,33 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import Form from "react-validation/build/form";
-import Input from "react-validation/build/input";
-import CheckButton from "react-validation/build/button";
-
 import AuthService from "../services/auth.service";
 
-const required = (value) => {
-  if (!value) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        This field is required!
-      </div>
-    );
-  }
-};
+const required = (value) => !value ? "This field is required!" : "";
 
 const Login = () => {
-  let navigate = useNavigate();
-
-  const form = useRef();
-  const checkBtn = useRef();
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({
+    username: "",
+    password: ""
+  });
 
-  const onChangeUsername = (e) => {
-    const username = e.target.value;
-    setUsername(username);
-  };
+  const validate = () => {
+    const newErrors = { username: "", password: "" };
+    let isValid = true;
 
-  const onChangePassword = (e) => {
-    const password = e.target.value;
-    setPassword(password);
+    newErrors.username = required(username);
+    if (newErrors.username) isValid = false;
+
+    newErrors.password = required(password);
+    if (newErrors.password) isValid = false;
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleLogin = (e) => {
@@ -43,9 +36,7 @@ const Login = () => {
     setMessage("");
     setLoading(true);
 
-    form.current.validateAll();
-
-    if (checkBtn.current.context._errors.length === 0) {
+    if (validate()) {
       AuthService.login(username, password).then(
         () => {
           navigate("/profile");
@@ -53,9 +44,7 @@ const Login = () => {
         },
         (error) => {
           const resMessage =
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
+            (error.response && error.response.data && error.response.data.message) ||
             error.message ||
             error.toString();
 
@@ -77,29 +66,29 @@ const Login = () => {
           className="profile-img-card"
         />
 
-        <Form onSubmit={handleLogin} ref={form}>
+        <form onSubmit={handleLogin}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
-            <Input
+            <input
               type="text"
               className="form-control"
               name="username"
               value={username}
-              onChange={onChangeUsername}
-              validations={[required]}
+              onChange={(e) => setUsername(e.target.value)}
             />
+            {errors.username && <div className="alert alert-danger" role="alert">{errors.username}</div>}
           </div>
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <Input
+            <input
               type="password"
               className="form-control"
               name="password"
               value={password}
-              onChange={onChangePassword}
-              validations={[required]}
+              onChange={(e) => setPassword(e.target.value)}
             />
+            {errors.password && <div className="alert alert-danger" role="alert">{errors.password}</div>}
           </div>
 
           <div className="form-group">
@@ -118,8 +107,7 @@ const Login = () => {
               </div>
             </div>
           )}
-          <CheckButton style={{ display: "none" }} ref={checkBtn} />
-        </Form>
+        </form>
       </div>
     </div>
   );

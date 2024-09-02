@@ -1,74 +1,50 @@
-import React, { useState, useRef } from "react";
-import Form from "react-validation/build/form";
-import Input from "react-validation/build/input";
-import CheckButton from "react-validation/build/button";
+import React, { useState } from "react";
 import { isEmail } from "validator";
-
 import AuthService from "../services/auth.service";
 
-const required = (value) => {
-  if (!value) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        This field is required!
-      </div>
-    );
-  }
-};
-
-const validEmail = (value) => {
-  if (!isEmail(value)) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        This is not a valid email.
-      </div>
-    );
-  }
-};
-
-const vusername = (value) => {
-  if (value.length < 3 || value.length > 20) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        The username must be between 3 and 20 characters.
-      </div>
-    );
-  }
-};
-
-const vpassword = (value) => {
-  if (value.length < 6 || value.length > 40) {
-    return (
-      <div className="alert alert-danger" role="alert">
-        The password must be between 6 and 40 characters.
-      </div>
-    );
-  }
-};
-
 const Register = () => {
-  const form = useRef();
-  const checkBtn = useRef();
-
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [successful, setSuccessful] = useState(false);
   const [message, setMessage] = useState("");
+  const [successful, setSuccessful] = useState(false);
 
-  const onChangeUsername = (e) => {
-    const username = e.target.value;
-    setUsername(username);
-  };
+  const [errors, setErrors] = useState({
+    username: "",
+    email: "",
+    password: ""
+  });
 
-  const onChangeEmail = (e) => {
-    const email = e.target.value;
-    setEmail(email);
-  };
+  const validate = () => {
+    const newErrors = { username: "", email: "", password: "" };
+    let isValid = true;
 
-  const onChangePassword = (e) => {
-    const password = e.target.value;
-    setPassword(password);
+    if (!username) {
+      newErrors.username = "This field is required!";
+      isValid = false;
+    } else if (username.length < 3 || username.length > 20) {
+      newErrors.username = "The username must be between 3 and 20 characters.";
+      isValid = false;
+    }
+
+    if (!email) {
+      newErrors.email = "This field is required!";
+      isValid = false;
+    } else if (!isEmail(email)) {
+      newErrors.email = "This is not a valid email.";
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = "This field is required!";
+      isValid = false;
+    } else if (password.length < 6 || password.length > 40) {
+      newErrors.password = "The password must be between 6 and 40 characters.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleRegister = (e) => {
@@ -77,9 +53,7 @@ const Register = () => {
     setMessage("");
     setSuccessful(false);
 
-    form.current.validateAll();
-
-    if (checkBtn.current.context._errors.length === 0) {
+    if (validate()) {
       AuthService.register(username, email, password).then(
         (response) => {
           setMessage(response.data.message);
@@ -87,9 +61,7 @@ const Register = () => {
         },
         (error) => {
           const resMessage =
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
+            (error.response && error.response.data && error.response.data.message) ||
             error.message ||
             error.toString();
 
@@ -109,43 +81,43 @@ const Register = () => {
           className="profile-img-card"
         />
 
-        <Form onSubmit={handleRegister} ref={form}>
+        <form onSubmit={handleRegister}>
           {!successful && (
             <div>
               <div className="form-group">
                 <label htmlFor="username">Username</label>
-                <Input
+                <input
                   type="text"
                   className="form-control"
                   name="username"
                   value={username}
-                  onChange={onChangeUsername}
-                  validations={[required, vusername]}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
+                {errors.username && <div className="alert alert-danger" role="alert">{errors.username}</div>}
               </div>
 
               <div className="form-group">
                 <label htmlFor="email">Email</label>
-                <Input
+                <input
                   type="text"
                   className="form-control"
                   name="email"
                   value={email}
-                  onChange={onChangeEmail}
-                  validations={[required, validEmail]}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
+                {errors.email && <div className="alert alert-danger" role="alert">{errors.email}</div>}
               </div>
 
               <div className="form-group">
                 <label htmlFor="password">Password</label>
-                <Input
+                <input
                   type="password"
                   className="form-control"
                   name="password"
                   value={password}
-                  onChange={onChangePassword}
-                  validations={[required, vpassword]}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
+                {errors.password && <div className="alert alert-danger" role="alert">{errors.password}</div>}
               </div>
 
               <div className="form-group">
@@ -156,16 +128,12 @@ const Register = () => {
 
           {message && (
             <div className="form-group">
-              <div
-                className={ successful ? "alert alert-success" : "alert alert-danger" }
-                role="alert"
-              >
+              <div className={successful ? "alert alert-success" : "alert alert-danger"} role="alert">
                 {message}
               </div>
             </div>
           )}
-          <CheckButton style={{ display: "none" }} ref={checkBtn} />
-        </Form>
+        </form>
       </div>
     </div>
   );
