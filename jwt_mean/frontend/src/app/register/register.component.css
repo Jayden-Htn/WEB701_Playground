@@ -1,0 +1,10 @@
+.card {
+    width: 50vw;
+    min-width: 200px;
+    margin-top: 40px;
+}
+
+img {
+    width: 20vw;
+    min-width: 100px;
+}
