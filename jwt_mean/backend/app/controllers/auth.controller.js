@@ -14,7 +14,6 @@ exports.signup = (req, res) => {
   });
 
   user.save().then((user) => {
-    console.log("CONTROLLER");
     if (req.body.roles) {
       Role.find(
         {
@@ -22,7 +21,7 @@ exports.signup = (req, res) => {
         },
         (err, roles) => {
           if (err) {
-            console.log("Error 1:", err);
+            console.log("Error auth controller 1:", err);
             res.status(500).send({ message: err });
             return;
           }
@@ -31,7 +30,7 @@ exports.signup = (req, res) => {
             res.send({ message: "User was registered successfully!" });
           }).catch(err => {
             if (err) {
-              console.log("Error 2:", err);
+              console.log("Error auth controller 2:", err);
               res.status(500).send({ message: err });
               return;
             }
@@ -102,6 +101,9 @@ exports.signin = (req, res) => {
       for (let i = 0; i < user.roles.length; i++) {
         authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
+
+      req.session.token = token;
+
       res.status(200).send({
         id: user._id,
         username: user.username,
@@ -116,4 +118,14 @@ exports.signin = (req, res) => {
         return;
       }
     });
+};
+
+
+exports.signout = async (req, res) => {
+  try {
+    req.session = null;
+    return res.status(200).send({ message: "You've been signed out!" });
+  } catch (err) {
+    this.next(err);
+  }
 };

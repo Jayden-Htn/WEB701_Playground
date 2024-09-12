@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieSession = require("cookie-session");
 const dbConfig = require("./app/config/db.config");
 
 const app = express();
@@ -16,6 +17,14 @@ app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  cookieSession({
+    name: "bezkoder-session",
+    keys: ["COOKIE_SECRET"], // should use as secret environment variable
+    httpOnly: true
+  })
+);
 
 const db = require("./app/models");
 const Role = db.role;
